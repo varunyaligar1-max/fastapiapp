@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from schemas.job import jobCreate,jobeUpdate
+from schemas.job import JobCreate,JobUpdate
 
 router=APIRouter(prefix="/job",tags=["job"])
 jobs=[]
@@ -17,14 +17,14 @@ def get_all_Company():
 def get_comapny(company_id: int):
      return jobs[company_id]
 
-@router.put("/{company_id}")
-def update_company(company_id:int,job:jobCreate):
-    jobs[company_id]=company
+@router.put("/{job_id}")
+def update_job(job_id:int,job:JobUpdate):
+    jobs[job_id]=job
     return jobs
 
-@router.delete("/{company_id}")
-def delete_company(company_id:int):
-    jobss.pop(company_id)
+@router.delete("/{job_id}")
+def delete_job(job_id:int):
+    jobs.pop(job_id)
     return jobs
 
 

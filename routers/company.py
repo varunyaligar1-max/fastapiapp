@@ -18,7 +18,7 @@ def get_comapny(company_id: int):
      return companies[company_id]
 
 @router.put("/{company_id}")
-def update_company(company_id:int,company:CompanyCreate):
+def update_company(company_id:int,company:CompanyUpdate):
     companies[company_id]=company
     return companies
 
