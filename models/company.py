@@ -9,5 +9,5 @@ class Company(Base):
     name = Column(String, index=True)
     email = Column(String, index=True)
     phone = Column(String, index=True)
-
+    location = Column(String)
     jobs = relationship("Job", back_populates="company")
