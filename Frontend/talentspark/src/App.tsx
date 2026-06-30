@@ -42,7 +42,7 @@ function App() {
         <Navbar />
         <Welcome />
         <JobCard />
-        <CompanyCard key={companies.id} companies={companies} />
+        <CompanyCard companies={companies} />
         <Footer />
       </>
   );
