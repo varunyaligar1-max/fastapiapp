@@ -1,0 +1,50 @@
+from fastapi import APIRouter, HTTPException, Depends, status
+from schemas.job import JobCreate, JobUpdate, JobResponse
+from models import job,company
+from models.job import Job
+from sqlalchemy.orm import Session
+from database import get_db, SessionLocal
+
+router = APIRouter(prefix="/job", tags=["job"])
+
+jobs = []
+
+@router.post("/", response_model=JobResponse)
+def Create_job(job: JobCreate, db: Session = Depends(get_db)):
+    db_job = Job(**job.dict())
+    db.add(db_job)
+    db.commit()
+    db.refresh(db_job)
+    return db_job
+
+@router.get("/")
+def get_all_job(db: Session = Depends(get_db)):
+    jobs = db.query(Job).all()
+    return jobs
+
+@router.get("/{job_id}")
+def get_job(job_id: int, db: Session = Depends(get_db)):
+    job = db.query(Job).filter(Job.id == job_id).first()
+    if not job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Job with id {job_id} not found")
+    return job
+
+@router.put("/{job_id}")
+def update_job(job_id: int, job: JobUpdate, db: Session = Depends(get_db)):
+    db_job = db.query(Job).filter(Job.id == job_id).first()
+    if not db_job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Job with id {job_id} not found")
+    for key, value in job.dict(exclude_unset=True).items():
+        setattr(db_job, key, value)
+    db.commit()
+    db.refresh(db_job)
+    return db_job
+
+@router.delete("/{job_id}")
+def delete_job(job_id: int, db: Session = Depends(get_db)):
+    db_job = db.query(Job).filter(Job.id == job_id).first()
+    if not db_job:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Job with id {job_id} not found")
+    db.delete(db_job)
+    db.commit()
+    return {"message": "Job deleted"}
