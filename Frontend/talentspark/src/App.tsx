@@ -5,7 +5,7 @@ import JobCard from './components/JobCard';
 import CompanyCard from './components/CompanyCard';
 import type {Company} from "./types/company";
 import{useEffect, useState} from "react";
-import {getCompanies} from "./Services/CompanyService";
+import {getCompanies,updateCompany,deleteCompany} from "./Services/CompanyService";
 
 function App() { 
   const [loading, setLoading] = useState(true);
