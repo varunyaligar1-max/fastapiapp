@@ -16,4 +16,8 @@ class UserResponse(UserBase):
     role: str
 
     class Config:
-        orm_mode = True
+        from_mode = True
+
+class Login_User(BaseModel):
+    email: str
+    password: str
