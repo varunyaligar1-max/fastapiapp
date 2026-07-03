@@ -1,12 +1,13 @@
 from pydantic import BaseModel
 from typing import Optional
-from schemas.job import JobResponse
+from .job import JobResponse
+
 
 class CompanyBase(BaseModel):
-    name:Optional[str]=None
-    email:Optional[str]=None
-    phone:Optional[str]=None
-    location:Optional[str]=None
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    location: Optional[str] = None
 
 class CompanyCreate(CompanyBase):
     name:str
@@ -16,10 +17,10 @@ class CompanyCreate(CompanyBase):
 
 class CompanyUpdate(CompanyBase):
     pass
-    
+
 class CompanyResponse(CompanyBase):
     id:int
-    jobs:list[JobResponse]
+    jobs: list[JobResponse]
 
     class Config:
-        from_mode=True
+        from_attributes = True
