@@ -1,5 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from models import User
+from utils.outh2 import get_current_user
+from models.user import User
 from models.user import User
 from schemas.user import UserCreate, UserResponse,Login_User
 from schemas.token import Token

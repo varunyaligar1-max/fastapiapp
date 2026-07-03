@@ -4,11 +4,12 @@ from models import company, job
 from models.company import Company
 from sqlalchemy.orm import Session
 from database import get_db,SessionLocal
+from utils.oauth2 import get_current_user,role_reqired
 
 router=APIRouter(prefix="/company",tags=["company"])
 # companies=[]
 @router.post("/",status_code=status.HTTP_201_CREATED,response_model=CompanyResponse)
-def Create_Company(company:CompanyCreate, db: Session = Depends(get_db)):
+def Create_Company(company:CompanyCreate, db: Session = Depends(get_db),current_user=Depends(role_reqired(["admin"]))):
     db_company = Company(**company.dict())          
     db.add(db_company)
     db.commit()
@@ -16,12 +17,12 @@ def Create_Company(company:CompanyCreate, db: Session = Depends(get_db)):
     return db_company
 
 @router.get("/",status_code=status.HTTP_200_OK ,response_model=list[CompanyResponse])
-def get_all_Company(db: Session = Depends(get_db)):
+def get_all_Company(db: Session = Depends(get_db), current_user=Depends(role_reqired(["admin"]))):
     companies=db.query(Company).all()
     return companies
 
 @router.get("/{company_id}",status_code=status.HTTP_200_OK ,response_model=CompanyResponse)
-def get_company(company_id: int, db: Session = Depends(get_db)):
+def get_company(company_id: int, db: Session = Depends(get_db),current_user=Depends(role_reqired(["admin"]))):
     company=db.query(Company).filter(Company.id == company_id).first()
     if not company:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Company with id {company_id} not found")
@@ -29,7 +30,7 @@ def get_company(company_id: int, db: Session = Depends(get_db)):
 
 
 @router.put("/{company_id}",status_code=status.HTTP_200_OK)
-def update_company(company_id:int,company:CompanyUpdate, db: Session = Depends(get_db)):
+def update_company(company_id:int,company:CompanyUpdate, db: Session = Depends(get_db),current_user=Depends(role_reqired(["admin"]))):
     db_company = db.query(Company).filter(Company.id == company_id).first()
     if not db_company:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Company with id {company_id} not found")
@@ -40,7 +41,7 @@ def update_company(company_id:int,company:CompanyUpdate, db: Session = Depends(g
     return db_company
 
 @router.delete("/{company_id}",status_code=status.HTTP_204_NO_CONTENT)
-def delete_company(company_id:int,db: Session = Depends(get_db)):
+def delete_company(company_id:int,db: Session = Depends(get_db),current_user=Depends(get_current_user)):
     db_company = db.query(Company).filter(Company.id == company_id).first()
     if not db_company:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Company with id {company_id} not found")

@@ -1,36 +1,36 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from schemas.job import JobCreate, JobUpdate, JobResponse
-from models import job,company
 from models.job import Job
 from sqlalchemy.orm import Session
-from database import get_db, SessionLocal
+from database import get_db
+from utils.outh2 import get_current_user, role_reqired
 
 router = APIRouter(prefix="/job", tags=["job"])
 
 jobs = []
 
-@router.post("/", response_model=JobResponse)
-def Create_job(job: JobCreate, db: Session = Depends(get_db)):
+@router.post("/", status_code=status.HTTP_201_CREATED, response_model=JobResponse)
+def Create_job(job: JobCreate, db: Session = Depends(get_db), current_user=Depends(role_reqired(["admin,hr"]))):   
     db_job = Job(**job.dict())
     db.add(db_job)
     db.commit()
     db.refresh(db_job)
     return db_job
 
-@router.get("/")
-def get_all_job(db: Session = Depends(get_db)):
+@router.get("/", status_code=status.HTTP_200_OK, response_model=list[JobResponse])
+def get_all_job(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     jobs = db.query(Job).all()
     return jobs
 
-@router.get("/{job_id}")
-def get_job(job_id: int, db: Session = Depends(get_db)):
+@router.get("/{job_id}", status_code=status.HTTP_200_OK, response_model=JobResponse)
+def get_job(job_id: int, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     job = db.query(Job).filter(Job.id == job_id).first()
     if not job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Job with id {job_id} not found")
     return job
 
-@router.put("/{job_id}")
-def update_job(job_id: int, job: JobUpdate, db: Session = Depends(get_db)):
+@router.put("/{job_id}", status_code=status.HTTP_200_OK)
+def update_job(job_id: int, job: JobUpdate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     db_job = db.query(Job).filter(Job.id == job_id).first()
     if not db_job:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Job with id {job_id} not found")
