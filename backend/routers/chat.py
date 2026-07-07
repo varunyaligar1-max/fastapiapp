@@ -1,27 +1,25 @@
-from fastapi import APIRouter,HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 
-from services.langchain_service import chat_with_memory
+from services.langchain_service import ask_career_chatbot_response
 
 router = APIRouter(
     prefix="/chat",
     tags=["Chat"]
 )
 
-
 class ChatRequest(BaseModel):
     session_id: str
     message: str
 
-
 class ChatResponse(BaseModel):
     response: str
 
-
-@router.post("/", response_model=ChatResponse)
+@router.post("/ask_career", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
-    session_id, reply = chat_with_memory(
-        user_query=request.message,
+
+    reply = ask_career_chatbot_response(
+        question=request.message,
         session_id=request.session_id
     )
 

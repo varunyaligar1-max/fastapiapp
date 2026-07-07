@@ -1,52 +1,44 @@
 import os
-import uuid
 from dotenv import load_dotenv
-from groq import Groq
-from langchain_core.messages import AIMessage, HumanMessage
+
+from langchain_groq import ChatGroq
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnableWithMessageHistory
+from langchain_community.chat_message_histories import ChatMessageHistory
 
 load_dotenv()
 
-# Initialize client lazily to avoid errors if API key is not set
-client = None
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",
+    api_key=os.getenv("GROQ_API_KEY"),
+    temperature=0.5,
+)
 
-def get_client():
-    global client
-    if client is None:
-        api_key = os.getenv("GROQ_API_KEY")
-        if not api_key:
-            raise ValueError("GROQ_API_KEY environment variable is not set. Please set it in your .env file.")
-        client = Groq(api_key=api_key)
-    return client
+prompt_with_memory = ChatPromptTemplate.from_messages([
+    ("system", "You are a helpful career guidance assistant."),
+    ("placeholder", "{chat_history}"),
+    ("human", "{user_query}")
+])
 
-chat_histories = {}
+chain_with_memory = prompt_with_memory | llm
 
-def get_session_history(session_id=None):
-    if session_id is None:
-        session_id = str(uuid.uuid4())
-    if session_id not in chat_histories:
-        chat_histories[session_id] = []
-    return session_id, chat_histories[session_id]
+store = {}
 
-def chat_with_memory(user_query: str, session_id: str | None = None) -> tuple[str, str]:
-    session_id, history = get_session_history(session_id)
+def get_history(session_id: str) -> ChatMessageHistory:
+    if session_id not in store:
+        store[session_id] = ChatMessageHistory()
+    return store[session_id]
 
-    history.append(HumanMessage(content=user_query))
+chat_with_memory = RunnableWithMessageHistory(
+    runnable=chain_with_memory,
+    get_session_history=get_history,
+    input_messages_key="user_query",
+    history_messages_key="chat_history"
+)
 
-    messages = []
-    for msg in history:
-        if isinstance(msg, HumanMessage):
-            messages.append({"role": "user", "content": msg.content})
-        elif isinstance(msg, AIMessage):
-            messages.append({"role": "assistant", "content": msg.content})
-
-    client = get_client()
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=messages,
-        temperature=0.7,
-        max_tokens=1024,
+def ask_career_chatbot_response(question: str, session_id: str = "default") -> str:
+    response = chat_with_memory.invoke(
+        {"user_query": question},
+        {"configurable": {"session_id": session_id}}
     )
-
-    reply_text = response.choices[0].message.content
-    history.append(AIMessage(content=reply_text))
-    return session_id, reply_text
+    return response.content
