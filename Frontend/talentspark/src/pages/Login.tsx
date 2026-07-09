@@ -1,129 +1,104 @@
-import { useState } from "react";
-import { matchJobs, embedJobs, semanticSearch } from "../Services/RagService";
-import type { JobMatchResult, SemanticSearchResult } from "../types/rag";
+import React, { useState } from "react";
+import { login } from "../Services/AuthService";
 
-function JobMatch() {
-    const [skills, setSkills] = useState("");
-    const [experience, setExperience] = useState("");
-    const [matches, setMatches] = useState<JobMatchResult[]>([]);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [searchResults, setSearchResults] = useState<SemanticSearchResult[]>([]);
+type Props = {
+    onLogin: (token: string) => void;
+    onSwitchToRegister: () => void;
+}
+
+function Login({ onLogin, onSwitchToRegister }: Props) {
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
-    const [embedMsg, setEmbedMsg] = useState("");
 
-    const handleEmbed = async () => {
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
         setLoading(true);
-        setEmbedMsg("");
         try {
-            const result = await embedJobs();
-            setEmbedMsg(result.message);
-        } catch {
-            setEmbedMsg("Failed to embed jobs. Is Qdrant running?");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleMatch = async () => {
-        if (!skills.trim()) return;
-        setLoading(true);
-        setMatches([]);
-        try {
-            const result = await matchJobs(skills, experience);
-            setMatches(result.matches);
-        } catch {
-            setMatches([]);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleSearch = async () => {
-        if (!searchQuery.trim()) return;
-        setLoading(true);
-        setSearchResults([]);
-        try {
-            const result = await semanticSearch(searchQuery);
-            setSearchResults(result.results);
-        } catch {
-            setSearchResults([]);
+            const result = await login({ email, password });
+            if (result && result.access_token) {
+                onLogin(result.access_token);
+            } else {
+                setError("Login failed. No token received.");
+            }
+        } catch (err: any) {
+            console.error("Error during login:", err);
+            setError(err.response?.data?.detail || "Invalid email or password");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div style={{ padding: "20px", maxWidth: "800px", margin: "0 auto", textAlign: "left" }}>
-            <h2>Smart Job Match</h2>
-
-            <div style={{ marginBottom: "20px", padding: "15px", border: "1px solid #ccc", borderRadius: "5px" }}>
-                <h3>Step 1: Embed Jobs into Vector DB</h3>
-                <p style={{ fontSize: "14px", marginBottom: "10px" }}>Click below to embed all jobs from the database into Qdrant for semantic search.</p>
-                <button onClick={handleEmbed} disabled={loading} style={{ padding: "8px 20px" }}>
-                    {loading ? "Embedding..." : "Embed All Jobs"}
+        <div style={{ display: "flex", justifyContent: "center", alignItems: "center", minHeight: "80vh" }}>
+            <form onSubmit={handleSubmit} style={{
+                padding: "30px",
+                border: "1px solid var(--border)",
+                borderRadius: "8px",
+                background: "var(--code-bg)",
+                width: "100%",
+                maxWidth: "400px",
+                boxShadow: "var(--shadow)",
+                textAlign: "left"
+            }}>
+                <h2 style={{ marginBottom: "20px" }}>Login</h2>
+                {error && <div style={{ color: "#ef4444", marginBottom: "15px", fontSize: "14px" }}>{error}</div>}
+                <div style={{ marginBottom: "15px" }}>
+                    <label htmlFor="email" style={{ display: "block", marginBottom: "5px", fontSize: "14px" }}>Email</label>
+                    <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Email"
+                        required
+                        style={{ width: "100%", padding: "10px", boxSizing: "border-box", borderRadius: "4px", border: "1px solid var(--border)" }}
+                    />
+                </div>
+                <div style={{ marginBottom: "20px" }}>
+                    <label htmlFor="password" style={{ display: "block", marginBottom: "5px", fontSize: "14px" }}>Password</label>
+                    <input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="Password"
+                        required
+                        style={{ width: "100%", padding: "10px", boxSizing: "border-box", borderRadius: "4px", border: "1px solid var(--border)" }}
+                    />
+                </div>
+                <button type="submit" disabled={loading} style={{
+                    width: "100%",
+                    padding: "12px",
+                    background: "var(--accent)",
+                    color: "#fff",
+                    border: "none",
+                    borderRadius: "4px",
+                    cursor: "pointer",
+                    fontSize: "16px",
+                    fontWeight: "bold"
+                }}>
+                    {loading ? "Logging in..." : "Login"}
                 </button>
-                {embedMsg && <p style={{ marginTop: "10px", color: "green" }}>{embedMsg}</p>}
-            </div>
-
-            <div style={{ marginBottom: "20px", padding: "15px", border: "1px solid #ccc", borderRadius: "5px" }}>
-                <h3>Step 2: Semantic Job Search</h3>
-                <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search jobs... e.g. 'python backend developer'"
-                    style={{ width: "70%", padding: "8px", marginRight: "10px" }}
-                />
-                <button onClick={handleSearch} disabled={loading || !searchQuery.trim()} style={{ padding: "8px 20px" }}>
-                    Search
-                </button>
-                {searchResults.length > 0 && (
-                    <div style={{ marginTop: "10px" }}>
-                        {searchResults.map((r, i) => (
-                            <div key={i} style={{ padding: "10px", borderBottom: "1px solid #eee" }}>
-                                <strong>{r.title}</strong> — Score: {r.score}
-                                <p>{r.description}</p>
-                                <small>Salary: {r.salary}</small>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-
-            <div style={{ padding: "15px", border: "1px solid #ccc", borderRadius: "5px" }}>
-                <h3>Step 3: Match Your Profile</h3>
-                <input
-                    type="text"
-                    value={skills}
-                    onChange={(e) => setSkills(e.target.value)}
-                    placeholder="Your skills... e.g. 'Python, React, SQL'"
-                    style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-                />
-                <input
-                    type="text"
-                    value={experience}
-                    onChange={(e) => setExperience(e.target.value)}
-                    placeholder="Your experience... e.g. '3 years in web development'"
-                    style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-                />
-                <button onClick={handleMatch} disabled={loading || !skills.trim()} style={{ padding: "8px 20px" }}>
-                    {loading ? "Matching..." : "Find Matching Jobs"}
-                </button>
-                {matches.length > 0 && (
-                    <div style={{ marginTop: "10px" }}>
-                        <h4>Top Matches</h4>
-                        {matches.map((m, i) => (
-                            <div key={i} style={{ padding: "10px", borderBottom: "1px solid #eee" }}>
-                                <strong>{m.title}</strong> — Match: {m.match_score}%
-                                <p>{m.description}</p>
-                                <small>Salary: {m.salary}</small>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
+                <p style={{ marginTop: "20px", fontSize: "14px", textAlign: "center" }}>
+                    Don't have an account?{" "}
+                    <button type="button" onClick={onSwitchToRegister} style={{
+                        background: "none",
+                        border: "none",
+                        color: "var(--accent)",
+                        cursor: "pointer",
+                        textDecoration: "underline",
+                        padding: 0,
+                        font: "inherit"
+                    }}>
+                        Register
+                    </button>
+                </p>
+            </form>
         </div>
     );
 }
 
-export default JobMatch;
+export default Login;

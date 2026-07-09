@@ -134,33 +134,65 @@ function App() {
   }
 
   if (error) {
-    return <div>Error: {error.message}</div>
+    return (
+      <div style={{ padding: "40px", textAlign: "center", maxWidth: "600px", margin: "40px auto", border: "1px solid var(--border)", borderRadius: "8px", background: "var(--code-bg)", boxShadow: "var(--shadow)" }}>
+        <h2 style={{ color: "#ef4444", marginBottom: "15px" }}>Connection Error</h2>
+        <p style={{ marginBottom: "20px", fontSize: "16px" }}>Could not load data. Please ensure the backend server is running and accessible.</p>
+        <div style={{ color: "var(--text)", fontSize: "14px", fontFamily: "var(--mono)", background: "rgba(0,0,0,0.05)", padding: "10px", borderRadius: "4px", marginBottom: "25px", wordBreak: "break-all" }}>
+          {error.message}
+        </div>
+        <button onClick={() => { setError(null); fetchData(); }} style={{ padding: "10px 20px", marginRight: "10px", border: "1px solid var(--border)", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+          Retry
+        </button>
+        <button onClick={() => {
+          localStorage.removeItem("token");
+          setToken(null);
+          setError(null);
+          window.location.reload();
+        }} style={{ padding: "10px 20px", background: "var(--accent)", color: "#fff", border: "none", borderRadius: "4px", cursor: "pointer", fontWeight: "bold" }}>
+          Logout & Reset
+        </button>
+      </div>
+    )
   }
   return (
     <>
       <NavBar currentPage={currentPage} onNavigate={setCurrentPage} />
-      <br />
       {currentPage === "home" && (
-        <>
-          <CompanyCard
-            companies={companies}
-            jobs={jobs}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            onAdd={handleAdd}
-          />
-          <JobCard
-            jobs={jobs}
-            companies={companies}
-            onEdit={handleJobEdit}
-            onDelete={handleJobDelete}
-            onAdd={handleJobAdd}
-          />
-        </>
+        <div className="section-container">
+          <div className="dashboard-grid">
+            <CompanyCard
+              companies={companies}
+              jobs={jobs}
+              onEdit={handleEdit}
+              onDelete={handleDelete}
+              onAdd={handleAdd}
+            />
+            <JobCard
+              jobs={jobs}
+              companies={companies}
+              onEdit={handleJobEdit}
+              onDelete={handleJobDelete}
+              onAdd={handleJobAdd}
+            />
+          </div>
+        </div>
       )}
-      {currentPage === "chat" && <Chat />}
-      {currentPage === "resume" && <ResumeAnalyser />}
-      {currentPage === "jobmatch" && <JobMatch />}
+      {currentPage === "chat" && (
+        <div className="section-container" style={{ maxWidth: "800px" }}>
+          <Chat />
+        </div>
+      )}
+      {currentPage === "resume" && (
+        <div className="section-container" style={{ maxWidth: "800px" }}>
+          <ResumeAnalyser />
+        </div>
+      )}
+      {currentPage === "jobmatch" && (
+        <div className="section-container" style={{ maxWidth: "800px" }}>
+          <JobMatch />
+        </div>
+      )}
       <Footer />
     </>
   )

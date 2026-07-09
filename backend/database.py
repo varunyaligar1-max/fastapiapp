@@ -1,6 +1,7 @@
 import os
 from sqlalchemy.ext.asyncio import create_async_engine,async_sessionmaker,AsyncSession
 from sqlalchemy.orm import declarative_base
+# pyrefly: ignore [missing-import]
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -17,7 +18,14 @@ elif DATABASE_URL.startswith("postgresql://"):
 
 if "supabase.com"in DATABASE_URL:
     DATABASE_URL=DATABASE_URL.split("?")[0]
-    engine= create_async_engine(DATABASE_URL,echo=False,connect_args={"ssl":"require"})
+    engine= create_async_engine(
+        DATABASE_URL,
+        echo=False,
+        connect_args={
+            "ssl": "require",
+            "statement_cache_size": 0
+        }
+    )
 else:
     engine=create_async_engine(DATABASE_URL,echo=False)
 SessionLocal=async_sessionmaker(autocommit=False,autoflush=False,bind=engine,class_=AsyncSession)

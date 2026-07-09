@@ -3,6 +3,7 @@ from schemas.company import CompanyCreate, CompanyUpdate, CompanyResponse
 from models.company import Company
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import selectinload
 from database import get_db,SessionLocal
 from utils.oauth2 import role_required,get_current_user
 router = APIRouter(prefix="/company",tags=["company"])
@@ -13,8 +14,8 @@ async def create_company(company: CompanyCreate,db:AsyncSession=Depends(get_db),
         db_company=Company(**company.dict())
         db.add(db_company)
         await db.commit()
-        await db.refresh(db_company)
-        return db_company
+        result = await db.execute(select(Company).filter(Company.id == db_company.id).options(selectinload(Company.jobs)))
+        return result.scalars().first()
     except Exception as e:
         await db.rollback()
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,detail=f"Database error during registration:{str(e)}")
@@ -22,7 +23,7 @@ async def create_company(company: CompanyCreate,db:AsyncSession=Depends(get_db),
 @router.get("/",status_code=status.HTTP_200_OK,response_model=list[CompanyResponse])
 async def get_all_company(db:AsyncSession=Depends(get_db),current_user=Depends(get_current_user)):
     try:
-        result=await db.execute(select(Company))
+        result=await db.execute(select(Company).options(selectinload(Company.jobs)))
         companies=result.scalars().all()
         return companies
 
@@ -32,7 +33,7 @@ async def get_all_company(db:AsyncSession=Depends(get_db),current_user=Depends(g
 @router.get("/{company_id}",status_code=status.HTTP_200_OK,response_model=CompanyResponse)
 async def get_company(company_id: int,db:AsyncSession=Depends(get_db),current_user=Depends(get_current_user)):
     try:
-        result=await db.execute(select(Company).filter(Company.id==company_id))
+        result=await db.execute(select(Company).filter(Company.id==company_id).options(selectinload(Company.jobs)))
         company=result.scalars().first()
         if not company:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,    detail="Company not found")
@@ -52,8 +53,8 @@ async def update_company(company_id: int, company: CompanyUpdate,db:AsyncSession
         for key, value in company.dict(exclude_unset=True).items():
             setattr(db_company, key, value)
         await db.commit()
-        await db.refresh(db_company)
-        return db_company
+        result = await db.execute(select(Company).filter(Company.id == company_id).options(selectinload(Company.jobs)))
+        return result.scalars().first()
     except HTTPException:
         raise
     except Exception as e:
@@ -67,7 +68,7 @@ async def delete_company(company_id: int,db:AsyncSession=Depends(get_db),current
         db_company = result.scalars().first()
         if not db_company:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Company not found")
-        db.delete(db_company)
+        await db.delete(db_company)
         await db.commit()
         return {"message": "Company deleted successfully"}
     except HTTPException:

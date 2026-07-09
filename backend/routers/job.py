@@ -67,7 +67,7 @@ async def delete_job(job_id: int,db:AsyncSession=Depends(get_db),current_user=De
         db_job = result.scalars().first()
         if not db_job:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Job not found")
-        db.delete(db_job)
+        await db.delete(db_job)
         await db.commit()
         return {"message": "Job deleted successfully"}
     except HTTPException:
