@@ -38,7 +38,7 @@ function App() {
       setCompanies(companiesData);
       setJobs(jobsData);
     } catch (error) {
-      setError(error);
+      setError(error instanceof Error ? error : new Error(String(error)));
     } finally {
       setLoading(false);
     }
@@ -53,7 +53,7 @@ function App() {
         )
       );
     } catch (error) {
-      setError(error);
+      setError(error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -64,7 +64,7 @@ function App() {
         prev.filter(company => company.id !== id)
       );
     } catch (error) {
-      setError(error);
+      setError(error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -73,7 +73,7 @@ function App() {
       const newCompany = await createCompany(company);
       setCompanies(prev => [...prev, newCompany]);
     } catch (error) {
-      setError(error);
+      setError(error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -86,7 +86,7 @@ function App() {
         )
       );
     } catch (error) {
-      setError(error);
+      setError(error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -97,7 +97,7 @@ function App() {
         prev.filter(job => job.id !== id)
       );
     } catch (error) {
-      setError(error);
+      setError(error instanceof Error ? error : new Error(String(error)));
     }
   }
 
@@ -106,7 +106,7 @@ function App() {
       const newJob = await createJob(job);
       setJobs(prev => [...prev, newJob]);
     } catch (error) {
-      setError(error);
+      setError(error instanceof Error ? error : new Error(String(error)));
     }
   }
 

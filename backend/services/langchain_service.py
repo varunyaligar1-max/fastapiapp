@@ -1,4 +1,8 @@
 import os
+import warnings
+# Suppress LangChain deprecation warning for RunnableWithMessageHistory
+warnings.filterwarnings("ignore", message=".*RunnableWithMessageHistory.*")
+
 from dotenv import load_dotenv
 
 from langchain_groq import ChatGroq

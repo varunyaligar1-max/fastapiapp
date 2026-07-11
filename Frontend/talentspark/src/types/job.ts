@@ -3,7 +3,6 @@ interface Job {
     title: string;
     description: string;
     company_id: number;
-    location: string;
     salary: number;
 }
 

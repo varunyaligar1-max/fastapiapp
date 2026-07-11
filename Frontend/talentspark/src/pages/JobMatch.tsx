@@ -99,7 +99,7 @@ function JobMatch() {
                                     <span className="badge success">Match Score: {Math.round(r.score * 100)}%</span>
                                 </div>
                                 <p style={{ fontSize: "14px", margin: "5px 0" }}>{r.description}</p>
-                                <small style={{ color: "var(--text)", fontWeight: "500" }}>💰 Salary: {r.salary.toLocaleString()}</small>
+                                <small style={{ color: "var(--text)", fontWeight: "500" }}>💰 Salary: {r.salary != null ? r.salary.toLocaleString() : "N/A"}</small>
                             </div>
                         ))}
                     </div>
@@ -143,7 +143,7 @@ function JobMatch() {
                                     </span>
                                 </div>
                                 <p style={{ fontSize: "14px", margin: "5px 0" }}>{m.description}</p>
-                                <small style={{ color: "var(--text)", fontWeight: "500" }}>💰 Salary: {m.salary.toLocaleString()}</small>
+                                <small style={{ color: "var(--text)", fontWeight: "500" }}>💰 Salary: {m.salary != null ? m.salary.toLocaleString() : "N/A"}</small>
                             </div>
                         ))}
                     </div>
